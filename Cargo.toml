@@ -1,0 +1,8 @@
+[package]
+name = "par_position"
+version = "0.1.0"
+authors = ["Maxwell Anderson <maxwell.brayden.anderson@gmail.com>"]
+edition = "2018"
+publish = false
+
+[dependencies]
