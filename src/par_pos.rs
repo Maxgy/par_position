@@ -3,10 +3,7 @@ use std::{
     thread,
 };
 
-pub fn par_pos<T: 'static + Copy + PartialEq + Send + Sync>(v: Arc<Vec<T>>, val: T) -> Option<usize>
-where
-    T: std::fmt::Debug,
-{
+pub fn par_pos<T: 'static + Copy + PartialEq + Send + Sync>(v: Arc<Vec<T>>, val: T) -> Option<usize> {
     let num_threads = 2;
 
     let (tx, rx) = mpsc::channel();
