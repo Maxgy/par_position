@@ -1,8 +1,8 @@
 #[cfg(test)]
 mod test {
-    use std::sync::Arc;
+    use std::{sync::Arc, thread};
 
-    use par_position::par_pos;
+    use par_position::*;
 
     #[test]
     fn par_pos_test() {
@@ -35,5 +35,22 @@ mod test {
         assert_eq!(par_pos(v.clone(), 420), v.iter().position(|&x| x == 420));
         assert_eq!(par_pos(v.clone(), 66), v.iter().position(|&x| x == 66));
         assert_eq!(par_pos(v.clone(), 69), v.iter().position(|&x| x == 69));
+    }
+
+    #[test]
+    fn threaded_test() {
+        let mut v = vec![0; 10_000_000];
+        v[5_999_999] = 42;
+        let v1 = Arc::new(v.clone());
+
+        let t2 = thread::spawn(move || {
+            v.iter().position(|&x| x == 42);
+        });
+        let t1 = thread::spawn(move || {
+            par_pos(v1.clone(), 42);
+        });
+
+        t1.join().unwrap();
+        t2.join().unwrap();
     }
 }
