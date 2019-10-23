@@ -35,19 +35,39 @@ mod test {
         assert_eq!(par_pos(v.clone(), 420), v.iter().position(|&x| x == 420));
         assert_eq!(par_pos(v.clone(), 66), v.iter().position(|&x| x == 66));
         assert_eq!(par_pos(v.clone(), 69), v.iter().position(|&x| x == 69));
+        assert_eq!(
+            par_pos_with_num_threads(v.clone(), 69, 3),
+            v.iter().position(|&x| x == 69)
+        );
+        assert_eq!(
+            par_pos_with_num_threads(v.clone(), 69, 4),
+            v.iter().position(|&x| x == 69)
+        );
+        assert_eq!(
+            par_pos_with_num_threads(v.clone(), 69, 5),
+            v.iter().position(|&x| x == 69)
+        );
+        assert_eq!(
+            par_pos_with_num_threads(v.clone(), 69, 6),
+            v.iter().position(|&x| x == 69)
+        );
+        assert_eq!(
+            par_pos_with_num_threads(v.clone(), 69, 7),
+            v.iter().position(|&x| x == 69)
+        );
     }
 
     #[test]
     fn threaded_test() {
-        let mut v = vec![0; 10_000_000];
-        v[5_999_999] = 42;
+        let mut v = vec!['a'; 10_000_000];
+        v[5_999_999] = 'b';
         let v1 = Arc::new(v.clone());
 
         let t2 = thread::spawn(move || {
-            v.iter().position(|&x| x == 42);
+            v.iter().position(|&x| x == 'b');
         });
         let t1 = thread::spawn(move || {
-            par_pos(v1.clone(), 42);
+            par_pos(v1.clone(), 'b');
         });
 
         t1.join().unwrap();
