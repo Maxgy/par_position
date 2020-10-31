@@ -3,25 +3,22 @@ use std::{
     thread,
 };
 
-pub fn par_pos<T: 'static + Copy + PartialEq + Send + Sync>(
-    v: Arc<Vec<T>>,
-    val: T,
-) -> Option<usize> {
-    par_pos_with_num_threads(v, val, 2)
+pub fn par_pos<T>(v: Arc<Vec<T>>, val: T) -> Option<usize>
+where
+    T: 'static + Copy + PartialEq + Send + Sync,
+{
+    par_pos_with_num_threads(v, val, 4)
 }
 
-pub fn par_pos_with_num_threads<T: 'static + Copy + PartialEq + Send + Sync>(
-    v: Arc<Vec<T>>,
-    val: T,
-    num_threads: usize,
-) -> Option<usize> {
+pub fn par_pos_with_num_threads<T>(v: Arc<Vec<T>>, val: T, num_threads: usize) -> Option<usize>
+where
+    T: 'static + Copy + PartialEq + Send + Sync,
+{
     if num_threads == 0 {
         None
     } else if num_threads == 1 {
         v.iter().position(|&x| x == val)
     } else {
-        let num_threads = if num_threads >= 100 { 100 } else { num_threads };
-
         let (tx, rx) = mpsc::channel();
 
         let mut handles = Vec::new();
@@ -41,7 +38,11 @@ pub fn par_pos_with_num_threads<T: 'static + Copy + PartialEq + Send + Sync>(
                 };
 
                 let found = v1[a..b].iter().position(|&x| x == val);
-                if tx1.send((n, found)).is_ok() {}
+                if let Some(x) = found {
+                    tx1.send(Some(x + n * chunk_size)).ok();
+                } else {
+                    tx1.send(None).ok();
+                }
             });
             handles.push(t);
         }
@@ -49,11 +50,11 @@ pub fn par_pos_with_num_threads<T: 'static + Copy + PartialEq + Send + Sync>(
         let mut num_recv = 0;
         while num_recv < num_threads {
             if let Ok(recv) = rx.try_recv() {
-                if let (n, Some(x)) = recv {
+                if let Some(x) = recv {
                     for t in handles {
                         t.join().unwrap();
                     }
-                    return Some(x + n * chunk_size);
+                    return Some(x);
                 } else {
                     num_recv += 1;
                 }
